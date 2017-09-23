@@ -4,7 +4,7 @@ chrome.runtime.onMessage.addListener(
     if (request.type === "start") {
       //タイトル情報を取得
       let title = $("title").html();
-      //画像を取得
+      //画像を取得 -> TODO popup側で適切な画像を選べたらいいかも
       let imgs = $("img");
       let imageSrc = null;
       imgs.each(function () {
