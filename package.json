@@ -4,6 +4,10 @@
   "main": "index.js",
   "author": "kani",
   "license": "MIT",
+  "scripts": {
+    "build": "webpack",
+    "build:watch": "webpack --watch"
+  },
   "dependencies": {
     "eventemitter3": "^2.0.3",
     "firebase": "^4.4.0",
