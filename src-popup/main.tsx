@@ -4,7 +4,7 @@ import * as React from "react";
 import { Button, Modal } from "react-bootstrap";
 import {EventEmitter} from "eventemitter3";
 import * as _ from "underscore";
-import { FirebaseWrapper, UserProfile, TextInfo } from "../src-common/firebase";
+import { FirebaseWrapper, UserProfile, TextInfo, PathMap, ListInfo, __DefaultList } from "../src-common/firebase";
 const Config = require("../setting.json");
 
 import {Login} from "../src-common/login";
@@ -18,6 +18,7 @@ export interface FottExState {
   loginView: boolean,
   emitter: EventEmitter,
   loading: boolean,
+  lists: ListInfo[],
   title: string,
   image: string,
   src: string,
@@ -44,6 +45,7 @@ export class Main extends React.Component<any, FottExState> {
     loginView: false,
     emitter: new EventEmitter(),
     loading: true,
+    lists: [],
     title: "",
     image: "",
     src: "",
@@ -65,19 +67,22 @@ export class Main extends React.Component<any, FottExState> {
     if(userProfileStr) {
       const userProfile = JSON.parse(userProfileStr);
       this.chromeContentMessage();
+      setTimeout(this.updateListInfo.bind(this), 0);
       this.setState({userProfile, logined: true});
     }
 
-    this.state.emitter.on("onClickRegister", (text: string)=>{
+    this.state.emitter.on("register", (listId: string, text: string)=>{
       const state: TextInfo = {
         title: this.state.title,
         url: this.state.src,
         image: this.state.image,
         text: text,
+        star: 3,
+        public: false,
       };
-      const _id = this.state.fb.generateId(this.state.userProfile);
+      const _id = this.state.fb.generateId(this.state.userProfile, PathMap.Text+"/"+listId);
       let reportContent = "";
-      this.state.fb.pushText(this.state.userProfile, _id, state).then(() => {
+      this.state.fb.pushText(this.state.userProfile, listId, _id, state).then(() => {
         reportContent = "Succeed Register!";
         this.setState({reported: true, reportContent});
       }).catch((error) => {
@@ -92,6 +97,7 @@ export class Main extends React.Component<any, FottExState> {
     if(userProfile) {
       localStorage.setItem("userProfile", JSON.stringify(userProfile));
       this.chromeContentMessage();
+      setTimeout(this.updateListInfo.bind(this), 0);
       this.setState({userProfile, logined: true});
     }
   }
@@ -106,6 +112,29 @@ export class Main extends React.Component<any, FottExState> {
     this.setState({logined: false});
   }
 
+  updateListInfo(): Promise<any>{
+    return new Promise<any>((resolve, reject)=>{
+      this.state.fb.getList(this.state.userProfile).then((result)=>{
+        if(result.length > 0) {
+          this.setState({lists: result});
+        }else {
+          this.state.fb.createList(this.state.userProfile, __DefaultList, {
+            title: "Your Text List",
+          }).then(()=>{
+            this.setState({lists: [{
+              __id: __DefaultList,
+              title: "Your Text List",
+            }]});
+          }).catch((error)=>console.error);
+        }
+        resolve();
+      }).catch((error)=>{
+        console.error(error);
+        reject();
+      });
+    });
+  }
+
   chromeContentMessage() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.tabs.sendMessage(tabs[0].id, { type: "start" }, (response: ContentScriptResponse) => {
@@ -114,7 +143,6 @@ export class Main extends React.Component<any, FottExState> {
           response = {title: "", image: "", src: ""};
         }
         const newState = _.assign({}, this.state, {loading: false}, response);
-        // console.log("newState", newState);
         this.setState(newState);
       });
     });
