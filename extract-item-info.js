@@ -14,13 +14,17 @@ chrome.runtime.onMessage.addListener(
           const srcObj = JSON.parse(srcStr);
           imageSrc = Object.keys(srcObj)[0];
           //タイトル for amazon
-          title = img.attr("alt");
+          if(img.attr("alt")){
+            title = img.attr("alt");
+          }
         }else if(img.attr("id") === "landingImage"){
           const srcStr = $("#landingImage").attr("data-a-dynamic-image");
           const srcObj = JSON.parse(srcStr);
           imageSrc = Object.keys(srcObj)[0];
           //タイトル for amazon
-          title = img.attr("alt");
+          if(img.attr("alt")){
+            title = img.attr("alt");
+          }
         }
       });
       if(!imageSrc) {
@@ -32,7 +36,7 @@ chrome.runtime.onMessage.addListener(
       }
       //URLを取得
       let src = document.URL;
-      // console.log({ title, image: imageSrc, src });
+      console.log({ title, image: imageSrc, src });
       sendResponse({ title, image: imageSrc, src });
     }
   });
