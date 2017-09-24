@@ -3,15 +3,25 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { Button, FormGroup, ControlLabel, FormControl } from "react-bootstrap";
 import {TextInfo, __DefaultList} from "../src-common/firebase";
+import {SelectList} from "./select-list";
+import {FottExState} from "./main";
+import {Star} from "./star";
 
-export class Form extends React.Component<any, any> {
+export interface FormState {
+  listId: string,
+  formContent: string,
+  star: number,
+}
+
+export class Form extends React.Component<FottExState, FormState> {
   constructor() {
     super();
   }
 
-  state: any = {
+  state: FormState = {
     listId: __DefaultList,
     formContent: "",
+    star: 3,
   }
 
   style: any = {
@@ -34,40 +44,36 @@ export class Form extends React.Component<any, any> {
     this.props.emitter.emit("register", this.state.listId, this.state.formContent);
   }
 
-  onChange(e) {
+  onChangeText(e) {
     this.setState({formContent: e.target.value});
   }
 
-  onChangeList(e) {
-    this.setState({listId: e.target.value});
+  onChangeStar(star) {
+    this.setState({star});
+  }
+
+  onChangeList(listId) {
+    this.setState({listId});
   }
 
   render() {
     const textArea = (
       <FormGroup controlId="formControlsTextarea">
-        <FormControl style={{height: 100}} componentClass="textarea" value={this.state.formContent} onChange={this.onChange.bind(this)} placeholder="YOUR TEXT" />
+        <FormControl style={{height: 100}} componentClass="textarea" value={this.state.formContent} onChange={this.onChangeText.bind(this)} placeholder="YOUR TEXT" />
       </FormGroup>
-    );
-
-    const lists = this.props.lists.map((list, i)=>{
-      return <option key={i} value={list.__id}>{list.title}</option>;
-    });
-    const selectListView = (
-      <FormControl value={this.state.listId} onChange={this.onChangeList.bind(this)} componentClass="select">
-        {lists}
-      </FormControl>
     );
 
     return (
       <div>
         <div style={this.style.column}>
           {textArea}
+          <Star star={this.state.star} onClick={this.onChangeStar.bind(this)}/>
           <div style={this.style.row}>
             <div style={this.style.margin}>
-              {selectListView}
+              <SelectList lists={this.props.lists} selectedId={this.state.listId} onSelect={this.onChangeList.bind(this)}/>
             </div>
             <div style={this.style.margin}>
-            <Button onClick={this.onClick.bind(this)}>登録</Button>
+              <Button onClick={this.onClick.bind(this)}>登録</Button>
             </div>
           </div>
         </div>
